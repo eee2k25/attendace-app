@@ -47,25 +47,29 @@
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
         }
         
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .student-card {
+        .student-row {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
-        .student-card:hover {
-            transform: translateY(-2px);
+        .student-row:hover {
+            transform: translateX(4px);
         }
         
-        .student-card.present {
+        .student-row.present {
             border-left: 4px solid #10b981;
-            background: rgba(16, 185, 129, 0.1);
+            background: rgba(16, 185, 129, 0.15);
         }
         
-        .student-card.absent {
+        .student-row.absent {
             border-left: 4px solid #ef4444;
-            background: rgba(239, 68, 68, 0.1);
+            background: rgba(239, 68, 68, 0.15);
         }
         
         .tab-active {
@@ -76,13 +80,13 @@
             position: absolute;
             border-radius: 50%;
             filter: blur(60px);
-            opacity: 0.5;
-            animation: float 6s ease-in-out infinite;
+            opacity: 0.4;
+            animation: float 8s ease-in-out infinite;
         }
         
         @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.05); }
         }
         
         .slide-in {
@@ -94,42 +98,74 @@
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .toggle-switch {
-            width: 50px;
-            height: 26px;
-            background: #374151;
-            border-radius: 13px;
-            position: relative;
+        .checkbox-custom {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            border: 2px solid #6366f1;
             cursor: pointer;
-            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
         }
         
-        .toggle-switch.active {
+        .checkbox-custom.checked {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-color: #10b981;
         }
         
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 22px;
-            height: 22px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: all 0.3s;
+        .checkbox-custom.unchecked {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            border-color: #ef4444;
         }
+
+        input[type="file"] { display: none; }
+        .file-upload-label { cursor: pointer; }
         
-        .toggle-switch.active::after {
-            left: 26px;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .file-upload-label {
+        .status-btn {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .status-btn.present-btn {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+        
+        .status-btn.present-btn:hover, .status-btn.present-btn.active {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-btn.absent-btn {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+        
+        .status-btn.absent-btn:hover, .status-btn.absent-btn.active {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .modal-scroll {
+            max-height: 80vh;
+            overflow-y: auto;
         }
     </style>
 </head>
@@ -137,7 +173,7 @@
     <!-- Floating Orbs -->
     <div class="floating-orb w-72 h-72 bg-purple-500 top-20 -left-20 fixed"></div>
     <div class="floating-orb w-96 h-96 bg-indigo-500 bottom-20 -right-20 fixed" style="animation-delay: -3s;"></div>
-    <div class="floating-orb w-64 h-64 bg-pink-500 top-1/2 left-1/2 fixed" style="animation-delay: -1.5s;"></div>
+    <div class="floating-orb w-64 h-64 bg-pink-500 top-1/2 left-1/3 fixed" style="animation-delay: -1.5s;"></div>
 
     <!-- Main Container -->
     <div class="relative z-10 min-h-screen">
@@ -148,13 +184,16 @@
                     <div class="w-10 h-10 btn-gradient rounded-xl flex items-center justify-center">
                         <i class="fas fa-clipboard-check text-lg"></i>
                     </div>
-                    <h1 class="text-xl font-bold">AttendEase</h1>
+                    <div>
+                        <h1 class="text-xl font-bold">AttendEase</h1>
+                        <p class="text-xs text-gray-400">College Attendance System</p>
+                    </div>
                 </div>
                 <div class="flex items-center gap-4">
-                    <span class="text-sm text-gray-300" id="currentDateTime"></span>
-                    <div class="w-10 h-10 glass rounded-full flex items-center justify-center cursor-pointer hover:bg-white/20 transition">
-                        <i class="fas fa-user"></i>
-                    </div>
+                    <span class="text-sm text-gray-300 hidden md:block" id="currentDateTime"></span>
+                    <button onclick="clearAllData()" class="glass-dark px-3 py-2 rounded-lg text-xs hover:bg-red-500/20 transition" title="Clear All Data">
+                        <i class="fas fa-trash-alt text-red-400"></i>
+                    </button>
                 </div>
             </div>
         </header>
@@ -167,7 +206,7 @@
                         <i class="fas fa-home mr-2"></i>Dashboard
                     </button>
                     <button onclick="showTab('attendance')" class="tab-btn px-6 py-3 rounded-xl font-medium transition-all hover:bg-white/10 whitespace-nowrap" data-tab="attendance">
-                        <i class="fas fa-user-check mr-2"></i>Take Attendance
+                        <i class="fas fa-user-check mr-2"></i>Attendance
                     </button>
                     <button onclick="showTab('timetable')" class="tab-btn px-6 py-3 rounded-xl font-medium transition-all hover:bg-white/10 whitespace-nowrap" data-tab="timetable">
                         <i class="fas fa-calendar-alt mr-2"></i>Timetable
@@ -277,22 +316,24 @@
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                             <div>
                                 <h2 class="text-xl font-bold mb-1">Take Attendance</h2>
-                                <p class="text-gray-400 text-sm">Mark students as present or absent</p>
+                                <p class="text-gray-400 text-sm">Select students individually or use quick actions</p>
                             </div>
                             <div class="flex items-center gap-3">
-                                <div class="flex items-center gap-2 glass-dark px-4 py-2 rounded-xl">
-                                    <span class="text-sm text-gray-400">Default:</span>
-                                    <button onclick="setDefaultStatus('present')" id="defaultPresent" class="px-3 py-1 rounded-lg text-sm btn-success text-white">Present</button>
-                                    <button onclick="setDefaultStatus('absent')" id="defaultAbsent" class="px-3 py-1 rounded-lg text-sm bg-gray-600 text-white">Absent</button>
-                                </div>
+                                <span class="text-xs text-gray-400">Selection Mode:</span>
+                                <button onclick="setSelectionMode('present')" id="modePresent" class="status-btn present-btn active">
+                                    <i class="fas fa-check mr-1"></i>Mark Present
+                                </button>
+                                <button onclick="setSelectionMode('absent')" id="modeAbsent" class="status-btn absent-btn">
+                                    <i class="fas fa-times mr-1"></i>Mark Absent
+                                </button>
                             </div>
                         </div>
 
                         <!-- Class Selection -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                             <div>
                                 <label class="block text-sm text-gray-400 mb-2">Select Class</label>
-                                <select id="attendanceClass" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <select id="attendanceClass" onchange="loadStudentsForAttendance()" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
                                     <option value="">Choose a class</option>
                                 </select>
                             </div>
@@ -303,27 +344,52 @@
                                 </select>
                             </div>
                             <div>
+                                <label class="block text-sm text-gray-400 mb-2">Hour/Period Number</label>
+                                <select id="attendanceHour" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="1">1st Hour</option>
+                                    <option value="2">2nd Hour</option>
+                                    <option value="3">3rd Hour</option>
+                                    <option value="4">4th Hour</option>
+                                    <option value="5">5th Hour</option>
+                                    <option value="6">6th Hour</option>
+                                    <option value="7">7th Hour</option>
+                                    <option value="8">8th Hour</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label class="block text-sm text-gray-400 mb-2">Lecturer</label>
-                                <input type="text" id="lecturerName" placeholder="Enter lecturer name" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="lecturerName" placeholder="Enter name" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
 
                         <!-- Search & Actions -->
-                        <div class="flex flex-col md:flex-row gap-4 mb-6">
+                        <div class="flex flex-col md:flex-row gap-4 mb-4">
                             <div class="flex-1 relative">
                                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="text" id="searchStudent" placeholder="Search students..." class="w-full glass-dark rounded-xl pl-12 pr-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="searchStudent" onkeyup="filterAttendanceList()" placeholder="Search by name, roll or PIN..." class="w-full glass-dark rounded-xl pl-12 pr-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
-                            <button onclick="markAllPresent()" class="btn-success px-6 py-3 rounded-xl font-medium hover:opacity-90 transition">
+                            <button onclick="markAllPresent()" class="btn-success px-5 py-3 rounded-xl font-medium hover:opacity-90 transition text-sm">
                                 <i class="fas fa-check-double mr-2"></i>All Present
                             </button>
-                            <button onclick="markAllAbsent()" class="btn-danger px-6 py-3 rounded-xl font-medium hover:opacity-90 transition">
+                            <button onclick="markAllAbsent()" class="btn-danger px-5 py-3 rounded-xl font-medium hover:opacity-90 transition text-sm">
                                 <i class="fas fa-times mr-2"></i>All Absent
+                            </button>
+                            <button onclick="resetAttendance()" class="glass-dark px-5 py-3 rounded-xl font-medium hover:bg-white/10 transition text-sm">
+                                <i class="fas fa-undo mr-2"></i>Reset
                             </button>
                         </div>
 
+                        <!-- Students List Header -->
+                        <div class="glass-dark rounded-xl p-3 mb-2 flex items-center gap-4 text-sm font-semibold text-gray-400">
+                            <div class="w-8 text-center">#</div>
+                            <div class="w-20">PIN</div>
+                            <div class="flex-1">Student Name</div>
+                            <div class="w-32">Roll Number</div>
+                            <div class="w-32 text-center">Status</div>
+                        </div>
+
                         <!-- Students List -->
-                        <div id="attendanceList" class="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
+                        <div id="attendanceList" class="space-y-2 max-h-[400px] overflow-y-auto scrollbar-hide">
                             <p class="text-gray-400 text-center py-8">Select a class to view students</p>
                         </div>
                     </div>
@@ -331,15 +397,26 @@
                     <!-- Submit Attendance -->
                     <div class="glass rounded-2xl p-6">
                         <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                            <div id="attendanceSummary" class="text-gray-400">
-                                <span>Select students to see summary</span>
+                            <div id="attendanceSummary" class="flex items-center gap-6">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-4 h-4 rounded bg-green-500"></div>
+                                    <span class="text-green-400 font-semibold"><span id="presentCount">0</span> Present</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-4 h-4 rounded bg-red-500"></div>
+                                    <span class="text-red-400 font-semibold"><span id="absentCount">0</span> Absent</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-4 h-4 rounded bg-gray-500"></div>
+                                    <span class="text-gray-300">Total: <span id="totalCount">0</span></span>
+                                </div>
                             </div>
                             <div class="flex gap-3">
                                 <button onclick="submitAttendance()" class="btn-gradient px-8 py-3 rounded-xl font-medium hover:opacity-90 transition">
                                     <i class="fas fa-save mr-2"></i>Save Attendance
                                 </button>
                                 <button onclick="shareToWhatsApp()" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-medium transition">
-                                    <i class="fab fa-whatsapp mr-2 text-lg"></i>Share to WhatsApp
+                                    <i class="fab fa-whatsapp mr-2 text-lg"></i>Share
                                 </button>
                             </div>
                         </div>
@@ -349,35 +426,38 @@
                 <!-- Timetable Tab -->
                 <div id="timetable" class="tab-content hidden">
                     <div class="glass rounded-2xl p-6 mb-6">
-                        <div class="flex items-center justify-between mb-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                             <div>
                                 <h2 class="text-xl font-bold mb-1">Timetable Management</h2>
-                                <p class="text-gray-400 text-sm">Manage your class schedule</p>
+                                <p class="text-gray-400 text-sm">Import from Excel or add classes manually</p>
                             </div>
-                            <div class="flex gap-3">
+                            <div class="flex flex-wrap gap-3">
                                 <label class="file-upload-label glass-dark px-4 py-2 rounded-xl hover:bg-white/10 transition cursor-pointer">
-                                    <i class="fas fa-file-excel mr-2 text-green-400"></i>Import Excel
-                                    <input type="file" id="timetableExcel" accept=".xlsx,.xls" onchange="importTimetable(event)">
+                                    <i class="fas fa-magic mr-2 text-purple-400"></i>Auto Import Excel
+                                    <input type="file" id="timetableExcel" accept=".xlsx,.xls" onchange="smartImportTimetable(event)">
                                 </label>
                                 <button onclick="showAddClassModal()" class="btn-gradient px-4 py-2 rounded-xl font-medium">
                                     <i class="fas fa-plus mr-2"></i>Add Class
+                                </button>
+                                <button onclick="clearTimetable()" class="btn-danger px-4 py-2 rounded-xl font-medium">
+                                    <i class="fas fa-trash mr-2"></i>Clear All
                                 </button>
                             </div>
                         </div>
 
                         <!-- Day Selection -->
                         <div class="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-2">
-                            <button onclick="selectDay('Monday')" class="day-btn px-6 py-2 rounded-xl font-medium transition bg-indigo-500" data-day="Monday">Mon</button>
-                            <button onclick="selectDay('Tuesday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Tuesday">Tue</button>
-                            <button onclick="selectDay('Wednesday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Wednesday">Wed</button>
-                            <button onclick="selectDay('Thursday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Thursday">Thu</button>
-                            <button onclick="selectDay('Friday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Friday">Fri</button>
-                            <button onclick="selectDay('Saturday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Saturday">Sat</button>
+                            <button onclick="selectDay('Monday')" class="day-btn px-6 py-2 rounded-xl font-medium transition bg-indigo-500" data-day="Monday">Monday</button>
+                            <button onclick="selectDay('Tuesday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Tuesday">Tuesday</button>
+                            <button onclick="selectDay('Wednesday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Wednesday">Wednesday</button>
+                            <button onclick="selectDay('Thursday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Thursday">Thursday</button>
+                            <button onclick="selectDay('Friday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Friday">Friday</button>
+                            <button onclick="selectDay('Saturday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Saturday">Saturday</button>
                         </div>
 
                         <!-- Timetable Grid -->
                         <div id="timetableGrid" class="space-y-3">
-                            <p class="text-gray-400 text-center py-8">No classes scheduled for this day. Add classes to get started.</p>
+                            <p class="text-gray-400 text-center py-8">No classes scheduled for this day.</p>
                         </div>
                     </div>
                 </div>
@@ -388,15 +468,18 @@
                         <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                             <div>
                                 <h2 class="text-xl font-bold mb-1">Student Management</h2>
-                                <p class="text-gray-400 text-sm">Add, import, or manage student lists</p>
+                                <p class="text-gray-400 text-sm">Auto-detect and import from any Excel format</p>
                             </div>
                             <div class="flex flex-wrap gap-3">
                                 <label class="file-upload-label btn-success px-4 py-2 rounded-xl font-medium cursor-pointer hover:opacity-90 transition">
-                                    <i class="fas fa-file-excel mr-2"></i>Import from Excel
-                                    <input type="file" id="studentExcel" accept=".xlsx,.xls" onchange="importStudents(event)">
+                                    <i class="fas fa-magic mr-2"></i>Smart Import Excel
+                                    <input type="file" id="studentExcel" accept=".xlsx,.xls" onchange="smartImportStudents(event)">
                                 </label>
                                 <button onclick="showAddStudentModal()" class="btn-gradient px-4 py-2 rounded-xl font-medium">
                                     <i class="fas fa-user-plus mr-2"></i>Add Student
+                                </button>
+                                <button onclick="clearAllStudents()" class="btn-danger px-4 py-2 rounded-xl font-medium">
+                                    <i class="fas fa-trash mr-2"></i>Clear All
                                 </button>
                             </div>
                         </div>
@@ -408,13 +491,23 @@
                             </select>
                             <div class="flex-1 relative">
                                 <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                                <input type="text" id="searchStudentList" onkeyup="filterStudents()" placeholder="Search by name or roll number..." class="w-full glass-dark rounded-xl pl-12 pr-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <input type="text" id="searchStudentList" onkeyup="filterStudents()" placeholder="Search by name, roll number or PIN..." class="w-full glass-dark rounded-xl pl-12 pr-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
                             </div>
                         </div>
 
+                        <!-- Students Table Header -->
+                        <div class="glass-dark rounded-xl p-3 mb-2 flex items-center gap-4 text-sm font-semibold text-gray-400">
+                            <div class="w-12 text-center">PIN</div>
+                            <div class="w-12 h-12"></div>
+                            <div class="flex-1">Student Name</div>
+                            <div class="w-32">Roll Number</div>
+                            <div class="w-24">Class</div>
+                            <div class="w-24 text-center">Actions</div>
+                        </div>
+
                         <!-- Students Grid -->
-                        <div id="studentsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <p class="text-gray-400 text-center py-8 col-span-full">No students added yet. Import from Excel or add manually.</p>
+                        <div id="studentsList" class="space-y-2 max-h-[500px] overflow-y-auto scrollbar-hide">
+                            <p class="text-gray-400 text-center py-8">No students added yet. Import from Excel or add manually.</p>
                         </div>
                     </div>
                 </div>
@@ -422,16 +515,19 @@
                 <!-- History Tab -->
                 <div id="history" class="tab-content hidden">
                     <div class="glass rounded-2xl p-6">
-                        <div class="flex items-center justify-between mb-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
                             <div>
                                 <h2 class="text-xl font-bold mb-1">Attendance History</h2>
-                                <p class="text-gray-400 text-sm">View past attendance records</p>
+                                <p class="text-gray-400 text-sm">View and export past attendance records</p>
                             </div>
                             <div class="flex gap-3">
-                                <input type="date" id="historyDate" class="glass-dark rounded-xl px-4 py-2 bg-transparent focus:outline-none">
-                                <select id="historyClass" class="glass-dark rounded-xl px-4 py-2 bg-transparent focus:outline-none">
+                                <input type="date" id="historyDate" onchange="filterHistory()" class="glass-dark rounded-xl px-4 py-2 bg-transparent focus:outline-none">
+                                <select id="historyClass" onchange="filterHistory()" class="glass-dark rounded-xl px-4 py-2 bg-transparent focus:outline-none">
                                     <option value="">All Classes</option>
                                 </select>
+                                <button onclick="clearHistory()" class="btn-danger px-4 py-2 rounded-xl text-sm">
+                                    <i class="fas fa-trash mr-1"></i>Clear
+                                </button>
                             </div>
                         </div>
 
@@ -444,16 +540,17 @@
         </main>
     </div>
 
-    <!-- Add Class Modal -->
+    <!-- Add/Edit Class Modal -->
     <div id="addClassModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="glass rounded-2xl p-6 w-full max-w-md slide-in">
+        <div class="glass rounded-2xl p-6 w-full max-w-md slide-in modal-scroll">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold">Add New Class</h3>
+                <h3 class="text-xl font-bold" id="classModalTitle">Add New Class</h3>
                 <button onclick="closeModal('addClassModal')" class="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form onsubmit="addClass(event)" class="space-y-4">
+            <form onsubmit="saveClass(event)" class="space-y-4">
+                <input type="hidden" id="editClassId" value="">
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Class Name</label>
                     <input type="text" id="className" required placeholder="e.g., CSE-A 3rd Year" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -488,22 +585,27 @@
                     </select>
                 </div>
                 <button type="submit" class="w-full btn-gradient py-3 rounded-xl font-medium">
-                    <i class="fas fa-plus mr-2"></i>Add Class
+                    <i class="fas fa-save mr-2"></i><span id="classSubmitText">Add Class</span>
                 </button>
             </form>
         </div>
     </div>
 
-    <!-- Add Student Modal -->
+    <!-- Add/Edit Student Modal -->
     <div id="addStudentModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div class="glass rounded-2xl p-6 w-full max-w-md slide-in">
+        <div class="glass rounded-2xl p-6 w-full max-w-md slide-in modal-scroll">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold">Add New Student</h3>
+                <h3 class="text-xl font-bold" id="studentModalTitle">Add New Student</h3>
                 <button onclick="closeModal('addStudentModal')" class="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            <form onsubmit="addStudent(event)" class="space-y-4">
+            <form onsubmit="saveStudent(event)" class="space-y-4">
+                <input type="hidden" id="editStudentId" value="">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">PIN Number</label>
+                    <input type="text" id="studentPin" required placeholder="e.g., 001 or auto-generated" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Roll Number</label>
                     <input type="text" id="studentRoll" required placeholder="e.g., 21CS101" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
@@ -514,14 +616,34 @@
                 </div>
                 <div>
                     <label class="block text-sm text-gray-400 mb-2">Class</label>
-                    <select id="studentClass" required class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Select Class</option>
-                    </select>
+                    <input type="text" id="studentClass" required placeholder="e.g., CSE-A" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <button type="submit" class="w-full btn-gradient py-3 rounded-xl font-medium">
-                    <i class="fas fa-user-plus mr-2"></i>Add Student
+                    <i class="fas fa-save mr-2"></i><span id="studentSubmitText">Add Student</span>
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- Excel Preview Modal -->
+    <div id="excelPreviewModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="glass rounded-2xl p-6 w-full max-w-4xl slide-in modal-scroll">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-xl font-bold">Smart Import Preview</h3>
+                    <p class="text-sm text-gray-400">We detected the following columns. Please verify mapping.</p>
+                </div>
+                <button onclick="closeModal('excelPreviewModal')" class="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="excelPreviewContent" class="mb-6"></div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal('excelPreviewModal')" class="glass-dark px-6 py-3 rounded-xl font-medium hover:bg-white/10">Cancel</button>
+                <button onclick="confirmImport()" class="btn-gradient px-6 py-3 rounded-xl font-medium">
+                    <i class="fas fa-check mr-2"></i>Confirm Import
+                </button>
+            </div>
         </div>
     </div>
 
@@ -540,29 +662,29 @@
             classes: [],
             timetable: [],
             attendanceRecords: [],
-            defaultStatus: 'present',
-            currentAttendance: {}
+            currentAttendance: {},
+            selectionMode: 'present'
         };
 
-        // Load data from localStorage
+        let pendingImport = { type: '', data: [], mapping: {} };
+
+        // Load/Save Data
         function loadData() {
             const saved = localStorage.getItem('attendEaseData');
-            if (saved) {
-                appData = JSON.parse(saved);
-            }
+            if (saved) appData = JSON.parse(saved);
             updateUI();
         }
 
-        // Save data to localStorage
         function saveData() {
             localStorage.setItem('attendEaseData', JSON.stringify(appData));
         }
 
-        // Update DateTime
+        // DateTime Update
         function updateDateTime() {
             const now = new Date();
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', { 
+                weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+            });
         }
         setInterval(updateDateTime, 1000);
         updateDateTime();
@@ -574,7 +696,6 @@
                 btn.classList.remove('tab-active');
                 btn.classList.add('hover:bg-white/10');
             });
-            
             document.getElementById(tabId).classList.remove('hidden');
             document.querySelector(`[data-tab="${tabId}"]`).classList.add('tab-active');
             document.querySelector(`[data-tab="${tabId}"]`).classList.remove('hover:bg-white/10');
@@ -582,16 +703,58 @@
             if (tabId === 'attendance') updateAttendanceTab();
             if (tabId === 'students') updateStudentsTab();
             if (tabId === 'history') updateHistoryTab();
+            if (tabId === 'timetable') updateTimetableGrid();
         }
 
         // Modal Functions
-        function showAddClassModal() {
+        function showAddClassModal(editId = null) {
+            document.getElementById('editClassId').value = editId || '';
+            document.getElementById('classModalTitle').textContent = editId ? 'Edit Class' : 'Add New Class';
+            document.getElementById('classSubmitText').textContent = editId ? 'Save Changes' : 'Add Class';
+            
+            if (editId) {
+                const cls = appData.timetable.find(c => c.id == editId);
+                if (cls) {
+                    document.getElementById('className').value = cls.name;
+                    document.getElementById('subjectName').value = cls.subject;
+                    document.getElementById('startTime').value = cls.startTime;
+                    document.getElementById('endTime').value = cls.endTime;
+                    document.getElementById('classLecturer').value = cls.lecturer;
+                    document.getElementById('classDay').value = cls.day;
+                }
+            } else {
+                document.getElementById('className').value = '';
+                document.getElementById('subjectName').value = '';
+                document.getElementById('startTime').value = '';
+                document.getElementById('endTime').value = '';
+                document.getElementById('classLecturer').value = '';
+            }
+            
             document.getElementById('addClassModal').classList.remove('hidden');
             document.getElementById('addClassModal').classList.add('flex');
         }
 
-        function showAddStudentModal() {
-            updateClassDropdowns();
+        function showAddStudentModal(editId = null) {
+            document.getElementById('editStudentId').value = editId || '';
+            document.getElementById('studentModalTitle').textContent = editId ? 'Edit Student' : 'Add New Student';
+            document.getElementById('studentSubmitText').textContent = editId ? 'Save Changes' : 'Add Student';
+            
+            if (editId) {
+                const student = appData.students.find(s => s.id == editId);
+                if (student) {
+                    document.getElementById('studentPin').value = student.pin || '';
+                    document.getElementById('studentRoll').value = student.roll;
+                    document.getElementById('studentName').value = student.name;
+                    document.getElementById('studentClass').value = student.class;
+                }
+            } else {
+                const nextPin = String(appData.students.length + 1).padStart(3, '0');
+                document.getElementById('studentPin').value = nextPin;
+                document.getElementById('studentRoll').value = '';
+                document.getElementById('studentName').value = '';
+                document.getElementById('studentClass').value = '';
+            }
+            
             document.getElementById('addStudentModal').classList.remove('hidden');
             document.getElementById('addStudentModal').classList.add('flex');
         }
@@ -601,24 +764,23 @@
             document.getElementById(modalId).classList.remove('flex');
         }
 
-        // Toast Notification
+        // Toast
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
-            const icon = document.getElementById('toastIcon');
-            const msg = document.getElementById('toastMessage');
-            
-            msg.textContent = message;
-            icon.className = type === 'success' ? 'fas fa-check-circle text-green-400 text-xl' : 'fas fa-exclamation-circle text-red-400 text-xl';
-            
+            document.getElementById('toastMessage').textContent = message;
+            document.getElementById('toastIcon').className = type === 'success' 
+                ? 'fas fa-check-circle text-green-400 text-xl' 
+                : 'fas fa-exclamation-circle text-red-400 text-xl';
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 3000);
         }
 
-        // Add Class
-        function addClass(e) {
+        // Save Class (Add/Edit)
+        function saveClass(e) {
             e.preventDefault();
-            const newClass = {
-                id: Date.now(),
+            const editId = document.getElementById('editClassId').value;
+            const classData = {
+                id: editId ? parseInt(editId) : Date.now(),
                 name: document.getElementById('className').value,
                 subject: document.getElementById('subjectName').value,
                 startTime: document.getElementById('startTime').value,
@@ -627,39 +789,56 @@
                 day: document.getElementById('classDay').value
             };
             
-            appData.timetable.push(newClass);
-            if (!appData.classes.includes(newClass.name)) {
-                appData.classes.push(newClass.name);
+            if (editId) {
+                const index = appData.timetable.findIndex(c => c.id == editId);
+                if (index !== -1) appData.timetable[index] = classData;
+            } else {
+                appData.timetable.push(classData);
+            }
+            
+            if (!appData.classes.includes(classData.name)) {
+                appData.classes.push(classData.name);
             }
             
             saveData();
             closeModal('addClassModal');
             updateTimetableGrid();
             updateClassDropdowns();
-            showToast('Class added successfully!');
-            e.target.reset();
+            showToast(editId ? 'Class updated!' : 'Class added!');
         }
 
-        // Add Student
-        function addStudent(e) {
+        // Save Student (Add/Edit)
+        function saveStudent(e) {
             e.preventDefault();
-            const newStudent = {
-                id: Date.now(),
+            const editId = document.getElementById('editStudentId').value;
+            const studentData = {
+                id: editId ? parseInt(editId) : Date.now(),
+                pin: document.getElementById('studentPin').value,
                 roll: document.getElementById('studentRoll').value,
                 name: document.getElementById('studentName').value,
                 class: document.getElementById('studentClass').value
             };
             
-            appData.students.push(newStudent);
+            if (editId) {
+                const index = appData.students.findIndex(s => s.id == editId);
+                if (index !== -1) appData.students[index] = studentData;
+            } else {
+                appData.students.push(studentData);
+            }
+            
+            if (!appData.classes.includes(studentData.class)) {
+                appData.classes.push(studentData.class);
+            }
+            
             saveData();
             closeModal('addStudentModal');
             updateStudentsTab();
-            showToast('Student added successfully!');
-            e.target.reset();
+            updateClassDropdowns();
+            showToast(editId ? 'Student updated!' : 'Student added!');
         }
 
-        // Import Students from Excel
-        function importStudents(event) {
+        // Smart Import Students - Auto-detect columns
+        function smartImportStudents(event) {
             const file = event.target.files[0];
             if (!file) return;
 
@@ -669,78 +848,247 @@
                 const workbook = XLSX.read(data, { type: 'array' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const json = XLSX.utils.sheet_to_json(sheet);
+                
+                if (json.length === 0) {
+                    showToast('No data found in Excel file', 'error');
+                    return;
+                }
 
-                json.forEach(row => {
+                // Auto-detect column mappings
+                const columns = Object.keys(json[0]);
+                const mapping = autoDetectStudentColumns(columns);
+                
+                pendingImport = { type: 'students', data: json, mapping };
+                showExcelPreview(json, mapping, 'students');
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        function autoDetectStudentColumns(columns) {
+            const mapping = { pin: '', roll: '', name: '', class: '' };
+            const lowerColumns = columns.map(c => c.toLowerCase());
+            
+            // PIN detection
+            const pinPatterns = ['pin', 'pin number', 'pinnumber', 'pin no', 'sno', 's.no', 'sl', 'sl.no', 'serial', '#', 'no', 'number'];
+            for (let i = 0; i < columns.length; i++) {
+                if (pinPatterns.some(p => lowerColumns[i].includes(p))) {
+                    mapping.pin = columns[i];
+                    break;
+                }
+            }
+            
+            // Roll number detection
+            const rollPatterns = ['roll', 'rollno', 'roll number', 'rollnumber', 'reg', 'regno', 'registration', 'id', 'student id', 'usn', 'htno', 'hall ticket'];
+            for (let i = 0; i < columns.length; i++) {
+                if (rollPatterns.some(p => lowerColumns[i].includes(p))) {
+                    mapping.roll = columns[i];
+                    break;
+                }
+            }
+            
+            // Name detection
+            const namePatterns = ['name', 'student name', 'studentname', 'full name', 'fullname'];
+            for (let i = 0; i < columns.length; i++) {
+                if (namePatterns.some(p => lowerColumns[i].includes(p))) {
+                    mapping.name = columns[i];
+                    break;
+                }
+            }
+            
+            // Class detection
+            const classPatterns = ['class', 'section', 'batch', 'branch', 'department', 'dept', 'group', 'division'];
+            for (let i = 0; i < columns.length; i++) {
+                if (classPatterns.some(p => lowerColumns[i].includes(p))) {
+                    mapping.class = columns[i];
+                    break;
+                }
+            }
+            
+            return mapping;
+        }
+
+        // Smart Import Timetable
+        function smartImportTimetable(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+                
+                if (json.length === 0) {
+                    showToast('No data found in Excel file', 'error');
+                    return;
+                }
+
+                const columns = Object.keys(json[0]);
+                const mapping = autoDetectTimetableColumns(columns);
+                
+                pendingImport = { type: 'timetable', data: json, mapping };
+                showExcelPreview(json, mapping, 'timetable');
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        function autoDetectTimetableColumns(columns) {
+            const mapping = { name: '', subject: '', startTime: '', endTime: '', lecturer: '', day: '' };
+            const lowerColumns = columns.map(c => c.toLowerCase());
+            
+            const patterns = {
+                name: ['class', 'classname', 'class name', 'batch', 'section'],
+                subject: ['subject', 'course', 'topic', 'paper'],
+                startTime: ['start', 'start time', 'starttime', 'from', 'begin'],
+                endTime: ['end', 'end time', 'endtime', 'to', 'finish'],
+                lecturer: ['lecturer', 'teacher', 'faculty', 'professor', 'instructor', 'staff'],
+                day: ['day', 'weekday', 'dayofweek']
+            };
+            
+            for (const [field, pats] of Object.entries(patterns)) {
+                for (let i = 0; i < columns.length; i++) {
+                    if (pats.some(p => lowerColumns[i].includes(p))) {
+                        mapping[field] = columns[i];
+                        break;
+                    }
+                }
+            }
+            
+            return mapping;
+        }
+
+        function showExcelPreview(data, mapping, type) {
+            const preview = document.getElementById('excelPreviewContent');
+            const columns = Object.keys(data[0]);
+            const sampleData = data.slice(0, 5);
+            
+            let html = `
+                <div class="mb-4">
+                    <h4 class="font-semibold mb-2">Column Mapping (click to change):</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+            `;
+            
+            const fields = type === 'students' 
+                ? [{ key: 'pin', label: 'PIN' }, { key: 'roll', label: 'Roll Number' }, { key: 'name', label: 'Name' }, { key: 'class', label: 'Class' }]
+                : [{ key: 'name', label: 'Class' }, { key: 'subject', label: 'Subject' }, { key: 'startTime', label: 'Start Time' }, { key: 'endTime', label: 'End Time' }, { key: 'lecturer', label: 'Lecturer' }, { key: 'day', label: 'Day' }];
+            
+            fields.forEach(field => {
+                html += `
+                    <div class="glass-dark rounded-lg p-3">
+                        <label class="text-xs text-gray-400 block mb-1">${field.label}</label>
+                        <select class="w-full bg-transparent text-sm focus:outline-none" onchange="updateMapping('${field.key}', this.value)">
+                            <option value="">-- Select --</option>
+                            ${columns.map(col => `<option value="${col}" ${mapping[field.key] === col ? 'selected' : ''}>${col}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            });
+            
+            html += `</div></div>`;
+            
+            // Preview table
+            html += `
+                <div class="overflow-x-auto">
+                    <h4 class="font-semibold mb-2">Preview (first 5 rows):</h4>
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-white/10">
+                                ${columns.map(col => `<th class="p-2 text-left text-gray-400">${col}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sampleData.map(row => `
+                                <tr class="border-b border-white/5">
+                                    ${columns.map(col => `<td class="p-2">${row[col] || '-'}</td>`).join('')}
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-400 mt-3"><i class="fas fa-info-circle mr-1"></i>Total rows to import: ${data.length}</p>
+            `;
+            
+            preview.innerHTML = html;
+            document.getElementById('excelPreviewModal').classList.remove('hidden');
+            document.getElementById('excelPreviewModal').classList.add('flex');
+        }
+
+        function updateMapping(field, value) {
+            pendingImport.mapping[field] = value;
+        }
+
+        function confirmImport() {
+            const { type, data, mapping } = pendingImport;
+            let imported = 0;
+            
+            if (type === 'students') {
+                data.forEach((row, index) => {
                     const student = {
-                        id: Date.now() + Math.random(),
-                        roll: row['Roll Number'] || row['roll'] || row['Roll'] || '',
-                        name: row['Name'] || row['name'] || row['Student Name'] || '',
-                        class: row['Class'] || row['class'] || row['Section'] || ''
+                        id: Date.now() + index,
+                        pin: String(row[mapping.pin] || index + 1).padStart(3, '0'),
+                        roll: String(row[mapping.roll] || ''),
+                        name: String(row[mapping.name] || ''),
+                        class: String(row[mapping.class] || 'Default')
                     };
-                    if (student.roll && student.name) {
+                    
+                    if (student.name) {
                         appData.students.push(student);
                         if (student.class && !appData.classes.includes(student.class)) {
                             appData.classes.push(student.class);
                         }
+                        imported++;
                     }
                 });
-
-                saveData();
+                
+                // Sort by PIN
+                appData.students.sort((a, b) => {
+                    const pinA = parseInt(a.pin) || 0;
+                    const pinB = parseInt(b.pin) || 0;
+                    return pinA - pinB;
+                });
+                
                 updateStudentsTab();
-                updateClassDropdowns();
-                showToast(`Imported ${json.length} students successfully!`);
-            };
-            reader.readAsArrayBuffer(file);
-            event.target.value = '';
-        }
-
-        // Import Timetable from Excel
-        function importTimetable(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(sheet);
-
-                json.forEach(row => {
+            } else if (type === 'timetable') {
+                data.forEach((row, index) => {
                     const classItem = {
-                        id: Date.now() + Math.random(),
-                        name: row['Class'] || row['class'] || '',
-                        subject: row['Subject'] || row['subject'] || '',
-                        startTime: row['Start Time'] || row['startTime'] || '',
-                        endTime: row['End Time'] || row['endTime'] || '',
-                        lecturer: row['Lecturer'] || row['lecturer'] || row['Teacher'] || '',
-                        day: row['Day'] || row['day'] || ''
+                        id: Date.now() + index,
+                        name: String(row[mapping.name] || 'Default'),
+                        subject: String(row[mapping.subject] || ''),
+                        startTime: String(row[mapping.startTime] || ''),
+                        endTime: String(row[mapping.endTime] || ''),
+                        lecturer: String(row[mapping.lecturer] || ''),
+                        day: String(row[mapping.day] || 'Monday')
                     };
-                    if (classItem.name && classItem.subject) {
+                    
+                    if (classItem.subject) {
                         appData.timetable.push(classItem);
-                        if (!appData.classes.includes(classItem.name)) {
+                        if (classItem.name && !appData.classes.includes(classItem.name)) {
                             appData.classes.push(classItem.name);
                         }
+                        imported++;
                     }
                 });
-
-                saveData();
+                
                 updateTimetableGrid();
-                updateClassDropdowns();
-                showToast(`Imported ${json.length} classes successfully!`);
-            };
-            reader.readAsArrayBuffer(file);
-            event.target.value = '';
+            }
+            
+            saveData();
+            updateClassDropdowns();
+            closeModal('excelPreviewModal');
+            showToast(`Imported ${imported} ${type === 'students' ? 'students' : 'classes'} successfully!`);
         }
 
         // Update Class Dropdowns
         function updateClassDropdowns() {
-            const dropdowns = ['attendanceClass', 'filterClass', 'studentClass', 'historyClass'];
+            const dropdowns = ['attendanceClass', 'filterClass', 'historyClass'];
             dropdowns.forEach(id => {
                 const select = document.getElementById(id);
                 if (select) {
                     const currentValue = select.value;
-                    select.innerHTML = '<option value="">Select Class</option>';
+                    select.innerHTML = '<option value="">All Classes</option>';
                     appData.classes.forEach(cls => {
                         select.innerHTML += `<option value="${cls}">${cls}</option>`;
                     });
@@ -765,7 +1113,7 @@
         // Update Timetable Grid
         function updateTimetableGrid() {
             const grid = document.getElementById('timetableGrid');
-            const dayClasses = appData.timetable.filter(c => c.day === selectedDay).sort((a, b) => a.startTime.localeCompare(b.startTime));
+            const dayClasses = appData.timetable.filter(c => c.day === selectedDay).sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
 
             if (dayClasses.length === 0) {
                 grid.innerHTML = '<p class="text-gray-400 text-center py-8">No classes scheduled for this day.</p>';
@@ -773,20 +1121,27 @@
             }
 
             grid.innerHTML = dayClasses.map(cls => `
-                <div class="glass-dark rounded-xl p-4 flex items-center justify-between group">
+                <div class="glass-dark rounded-xl p-4 flex items-center justify-between group hover:bg-white/5 transition">
                     <div class="flex items-center gap-4">
-                        <div class="w-16 text-center">
-                            <span class="text-lg font-bold text-indigo-400">${cls.startTime}</span>
-                            <p class="text-xs text-gray-500">${cls.endTime}</p>
+                        <div class="w-20 text-center">
+                            <span class="text-lg font-bold text-indigo-400">${cls.startTime || '--:--'}</span>
+                            <p class="text-xs text-gray-500">${cls.endTime || '--:--'}</p>
                         </div>
                         <div class="w-1 h-12 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
                         <div>
-                            <h4 class="font-semibold">${cls.subject}</h4>
-                            <p class="text-sm text-gray-400">${cls.name} • ${cls.lecturer}</p>
+                            <h4 class="font-semibold text-lg">${cls.subject}</h4>
+                            <p class="text-sm text-gray-400">
+                                <i class="fas fa-users mr-1"></i>${cls.name} 
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-user mr-1"></i>${cls.lecturer}
+                            </p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
-                        <button onclick="deleteClass(${cls.id})" class="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-red-400">
+                    <div class="flex items-center gap-2">
+                        <button onclick="showAddClassModal(${cls.id})" class="w-10 h-10 rounded-lg hover:bg-indigo-500/20 flex items-center justify-center text-indigo-400 opacity-0 group-hover:opacity-100 transition">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteClass(${cls.id})" class="w-10 h-10 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-red-400 opacity-0 group-hover:opacity-100 transition">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
@@ -794,21 +1149,34 @@
             `).join('');
         }
 
-        // Delete Class
         function deleteClass(id) {
-            appData.timetable = appData.timetable.filter(c => c.id !== id);
-            saveData();
-            updateTimetableGrid();
-            showToast('Class deleted');
+            if (confirm('Delete this class?')) {
+                appData.timetable = appData.timetable.filter(c => c.id !== id);
+                saveData();
+                updateTimetableGrid();
+                showToast('Class deleted');
+            }
+        }
+
+        function clearTimetable() {
+            if (confirm('Clear entire timetable?')) {
+                appData.timetable = [];
+                saveData();
+                updateTimetableGrid();
+                showToast('Timetable cleared');
+            }
+        }
+
+        // Selection Mode for Attendance
+        function setSelectionMode(mode) {
+            appData.selectionMode = mode;
+            document.getElementById('modePresent').classList.toggle('active', mode === 'present');
+            document.getElementById('modeAbsent').classList.toggle('active', mode === 'absent');
         }
 
         // Update Attendance Tab
         function updateAttendanceTab() {
             updateClassDropdowns();
-            const classSelect = document.getElementById('attendanceClass');
-            classSelect.onchange = loadStudentsForAttendance;
-
-            // Load subjects based on timetable
             const subjectSelect = document.getElementById('attendanceSubject');
             subjectSelect.innerHTML = '<option value="">Choose subject</option>';
             const uniqueSubjects = [...new Set(appData.timetable.map(t => t.subject))];
@@ -824,106 +1192,108 @@
             
             if (!selectedClass) {
                 list.innerHTML = '<p class="text-gray-400 text-center py-8">Select a class to view students</p>';
+                updateAttendanceSummary([]);
                 return;
             }
 
-            const students = appData.students.filter(s => s.class === selectedClass);
+            let students = appData.students.filter(s => s.class === selectedClass);
+            students.sort((a, b) => (parseInt(a.pin) || 0) - (parseInt(b.pin) || 0));
             
             if (students.length === 0) {
                 list.innerHTML = '<p class="text-gray-400 text-center py-8">No students in this class</p>';
+                updateAttendanceSummary([]);
                 return;
             }
 
-            // Initialize attendance
+            // Initialize attendance (default all present)
             students.forEach(s => {
                 if (appData.currentAttendance[s.id] === undefined) {
-                    appData.currentAttendance[s.id] = appData.defaultStatus === 'present';
+                    appData.currentAttendance[s.id] = true;
                 }
             });
 
             renderAttendanceList(students);
         }
 
-        // Render Attendance List
         function renderAttendanceList(students) {
             const list = document.getElementById('attendanceList');
-            list.innerHTML = students.map(student => {
+            list.innerHTML = students.map((student, index) => {
                 const isPresent = appData.currentAttendance[student.id];
                 return `
-                    <div class="student-card glass-dark rounded-xl p-4 flex items-center justify-between ${isPresent ? 'present' : 'absent'}" data-id="${student.id}">
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold">
-                                ${student.name.charAt(0)}
-                            </div>
-                            <div>
-                                <h4 class="font-medium">${student.name}</h4>
-                                <p class="text-sm text-gray-400">${student.roll}</p>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-sm ${isPresent ? 'text-green-400' : 'text-red-400'}">${isPresent ? 'Present' : 'Absent'}</span>
-                            <div class="toggle-switch ${isPresent ? 'active' : ''}" onclick="toggleAttendance(${student.id})"></div>
+                    <div class="student-row glass-dark rounded-xl p-3 flex items-center gap-4 cursor-pointer ${isPresent ? 'present' : 'absent'}" 
+                         data-id="${student.id}" onclick="toggleStudentAttendance(${student.id})">
+                        <div class="w-8 text-center text-gray-400 font-mono">${index + 1}</div>
+                        <div class="w-20 font-mono text-indigo-400 font-semibold">${student.pin || '-'}</div>
+                        <div class="flex-1 font-medium">${student.name}</div>
+                        <div class="w-32 text-gray-400 text-sm">${student.roll}</div>
+                        <div class="w-32 flex justify-center gap-2">
+                            <button onclick="event.stopPropagation(); setStudentStatus(${student.id}, true)" 
+                                    class="status-btn present-btn ${isPresent ? 'active' : ''}">P</button>
+                            <button onclick="event.stopPropagation(); setStudentStatus(${student.id}, false)" 
+                                    class="status-btn absent-btn ${!isPresent ? 'active' : ''}">A</button>
                         </div>
                     </div>
                 `;
             }).join('');
-
-            updateAttendanceSummary();
+            updateAttendanceSummary(students);
         }
 
-        // Toggle Attendance
-        function toggleAttendance(studentId) {
-            appData.currentAttendance[studentId] = !appData.currentAttendance[studentId];
+        function toggleStudentAttendance(studentId) {
+            if (appData.selectionMode === 'present') {
+                appData.currentAttendance[studentId] = true;
+            } else {
+                appData.currentAttendance[studentId] = false;
+            }
             loadStudentsForAttendance();
         }
 
-        // Mark All Present/Absent
+        function setStudentStatus(studentId, isPresent) {
+            appData.currentAttendance[studentId] = isPresent;
+            loadStudentsForAttendance();
+        }
+
+        function filterAttendanceList() {
+            const term = document.getElementById('searchStudent').value.toLowerCase();
+            document.querySelectorAll('.student-row').forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? 'flex' : 'none';
+            });
+        }
+
         function markAllPresent() {
             const selectedClass = document.getElementById('attendanceClass').value;
-            const students = appData.students.filter(s => s.class === selectedClass);
-            students.forEach(s => appData.currentAttendance[s.id] = true);
+            appData.students.filter(s => s.class === selectedClass).forEach(s => {
+                appData.currentAttendance[s.id] = true;
+            });
             loadStudentsForAttendance();
         }
 
         function markAllAbsent() {
             const selectedClass = document.getElementById('attendanceClass').value;
-            const students = appData.students.filter(s => s.class === selectedClass);
-            students.forEach(s => appData.currentAttendance[s.id] = false);
+            appData.students.filter(s => s.class === selectedClass).forEach(s => {
+                appData.currentAttendance[s.id] = false;
+            });
             loadStudentsForAttendance();
         }
 
-        // Set Default Status
-        function setDefaultStatus(status) {
-            appData.defaultStatus = status;
-            if (status === 'present') {
-                document.getElementById('defaultPresent').className = 'px-3 py-1 rounded-lg text-sm btn-success text-white';
-                document.getElementById('defaultAbsent').className = 'px-3 py-1 rounded-lg text-sm bg-gray-600 text-white';
-            } else {
-                document.getElementById('defaultAbsent').className = 'px-3 py-1 rounded-lg text-sm btn-danger text-white';
-                document.getElementById('defaultPresent').className = 'px-3 py-1 rounded-lg text-sm bg-gray-600 text-white';
-            }
+        function resetAttendance() {
+            appData.currentAttendance = {};
+            loadStudentsForAttendance();
         }
 
-        // Update Attendance Summary
-        function updateAttendanceSummary() {
-            const selectedClass = document.getElementById('attendanceClass').value;
-            const students = appData.students.filter(s => s.class === selectedClass);
+        function updateAttendanceSummary(students) {
             const present = students.filter(s => appData.currentAttendance[s.id]).length;
             const absent = students.length - present;
-            
-            document.getElementById('attendanceSummary').innerHTML = `
-                <span class="text-green-400"><i class="fas fa-check-circle mr-1"></i>${present} Present</span>
-                <span class="mx-3">|</span>
-                <span class="text-red-400"><i class="fas fa-times-circle mr-1"></i>${absent} Absent</span>
-                <span class="mx-3">|</span>
-                <span class="text-gray-300">Total: ${students.length}</span>
-            `;
+            document.getElementById('presentCount').textContent = present;
+            document.getElementById('absentCount').textContent = absent;
+            document.getElementById('totalCount').textContent = students.length;
         }
 
         // Submit Attendance
         function submitAttendance() {
             const selectedClass = document.getElementById('attendanceClass').value;
             const subject = document.getElementById('attendanceSubject').value;
+            const hour = document.getElementById('attendanceHour').value;
             const lecturer = document.getElementById('lecturerName').value;
 
             if (!selectedClass || !subject) {
@@ -940,12 +1310,13 @@
                 date: new Date().toISOString(),
                 class: selectedClass,
                 subject: subject,
+                hour: hour,
                 lecturer: lecturer,
                 totalStudents: students.length,
                 presentCount: presentStudents.length,
                 absentCount: absentStudents.length,
-                presentList: presentStudents.map(s => ({ roll: s.roll, name: s.name })),
-                absentList: absentStudents.map(s => ({ roll: s.roll, name: s.name }))
+                presentList: presentStudents.map(s => ({ pin: s.pin, roll: s.roll, name: s.name })),
+                absentList: absentStudents.map(s => ({ pin: s.pin, roll: s.roll, name: s.name }))
             };
 
             appData.attendanceRecords.push(record);
@@ -959,10 +1330,11 @@
         function shareToWhatsApp() {
             const selectedClass = document.getElementById('attendanceClass').value;
             const subject = document.getElementById('attendanceSubject').value;
+            const hour = document.getElementById('attendanceHour').value;
             const lecturer = document.getElementById('lecturerName').value;
 
-            if (!selectedClass || !subject) {
-                showToast('Please select class and subject', 'error');
+            if (!selectedClass) {
+                showToast('Please select a class', 'error');
                 return;
             }
 
@@ -971,37 +1343,36 @@
             const absentStudents = students.filter(s => !appData.currentAttendance[s.id]);
 
             const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
             const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-            let message = `📋 *ATTENDANCE REPORT*\n`;
-            message += `━━━━━━━━━━━━━━━━━━\n\n`;
-            message += `📅 *Date:* ${dateStr}\n`;
-            message += `⏰ *Time:* ${timeStr}\n`;
-            message += `🏫 *Class:* ${selectedClass}\n`;
-            message += `📚 *Subject:* ${subject}\n`;
-            message += `👨‍🏫 *Lecturer:* ${lecturer || 'N/A'}\n\n`;
-            message += `━━━━━━━━━━━━━━━━━━\n`;
-            message += `📊 *SUMMARY*\n`;
-            message += `━━━━━━━━━━━━━━━━━━\n\n`;
-            message += `✅ Present: ${presentStudents.length}\n`;
-            message += `❌ Absent: ${absentStudents.length}\n`;
-            message += `📝 Total: ${students.length}\n`;
-            message += `📈 Attendance: ${((presentStudents.length / students.length) * 100).toFixed(1)}%\n\n`;
+            let msg = `📋 *ATTENDANCE REPORT*\n`;
+            msg += `━━━━━━━━━━━━━━━━━━\n\n`;
+            msg += `📅 Date: ${dateStr}\n`;
+            msg += `⏰ Time: ${timeStr}\n`;
+            msg += `🏫 Class: ${selectedClass}\n`;
+            msg += `📚 Subject: ${subject || 'N/A'}\n`;
+            msg += `🕐 Hour: ${hour || 'N/A'}\n`;
+            msg += `👨‍🏫 Lecturer: ${lecturer || 'N/A'}\n\n`;
+            msg += `━━━━━━━━━━━━━━━━━━\n`;
+            msg += `📊 *SUMMARY*\n`;
+            msg += `━━━━━━━━━━━━━━━━━━\n\n`;
+            msg += `✅ Present: ${presentStudents.length}\n`;
+            msg += `❌ Absent: ${absentStudents.length}\n`;
+            msg += `📝 Total: ${students.length}\n`;
+            msg += `📈 Attendance: ${((presentStudents.length / students.length) * 100).toFixed(1)}%\n\n`;
 
             if (absentStudents.length > 0) {
-                message += `━━━━━━━━━━━━━━━━━━\n`;
-                message += `❌ *ABSENTEES*\n`;
-                message += `━━━━━━━━━━━━━━━━━━\n\n`;
+                msg += `━━━━━━━━━━━━━━━━━━\n`;
+                msg += `❌ *ABSENTEES*\n`;
+                msg += `━━━━━━━━━━━━━━━━━━\n\n`;
                 absentStudents.forEach((s, i) => {
-                    message += `${i + 1}. ${s.roll} - ${s.name}\n`;
+                    msg += `${i + 1}. [${s.pin}] ${s.roll} - ${s.name}\n`;
                 });
             }
 
-            message += `\n_Generated by AttendEase_`;
-
-            const encodedMessage = encodeURIComponent(message);
-            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+            msg += `\n_Generated by AttendEase_`;
+            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
         }
 
         // Update Students Tab
@@ -1010,75 +1381,110 @@
             filterStudents();
         }
 
-        // Filter Students
         function filterStudents() {
             const classFilter = document.getElementById('filterClass').value;
             const searchTerm = document.getElementById('searchStudentList').value.toLowerCase();
 
             let filtered = appData.students;
-            if (classFilter) {
-                filtered = filtered.filter(s => s.class === classFilter);
-            }
+            if (classFilter) filtered = filtered.filter(s => s.class === classFilter);
             if (searchTerm) {
                 filtered = filtered.filter(s => 
                     s.name.toLowerCase().includes(searchTerm) || 
-                    s.roll.toLowerCase().includes(searchTerm)
+                    s.roll.toLowerCase().includes(searchTerm) ||
+                    (s.pin || '').toLowerCase().includes(searchTerm)
                 );
             }
+            
+            // Sort by PIN
+            filtered.sort((a, b) => (parseInt(a.pin) || 0) - (parseInt(b.pin) || 0));
 
             const list = document.getElementById('studentsList');
             if (filtered.length === 0) {
-                list.innerHTML = '<p class="text-gray-400 text-center py-8 col-span-full">No students found</p>';
+                list.innerHTML = '<p class="text-gray-400 text-center py-8">No students found</p>';
                 return;
             }
 
             list.innerHTML = filtered.map(student => `
-                <div class="glass-dark rounded-xl p-4 group">
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-lg">
-                            ${student.name.charAt(0)}
-                        </div>
+                <div class="glass-dark rounded-xl p-3 flex items-center gap-4 group hover:bg-white/5 transition">
+                    <div class="w-12 text-center font-mono text-indigo-400 font-bold">${student.pin || '-'}</div>
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-lg">
+                        ${student.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-semibold">${student.name}</h4>
+                    </div>
+                    <div class="w-32 text-gray-400">${student.roll}</div>
+                    <div class="w-24">
+                        <span class="px-3 py-1 rounded-full text-xs bg-indigo-500/20 text-indigo-300">${student.class}</span>
+                    </div>
+                    <div class="w-24 flex justify-center gap-2">
+                        <button onclick="showAddStudentModal(${student.id})" class="w-8 h-8 rounded-lg hover:bg-indigo-500/20 flex items-center justify-center text-indigo-400 opacity-0 group-hover:opacity-100 transition">
+                            <i class="fas fa-edit"></i>
+                        </button>
                         <button onclick="deleteStudent(${student.id})" class="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-red-400 opacity-0 group-hover:opacity-100 transition">
                             <i class="fas fa-trash"></i>
                         </button>
                     </div>
-                    <h4 class="font-semibold">${student.name}</h4>
-                    <p class="text-sm text-gray-400">${student.roll}</p>
-                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs bg-indigo-500/20 text-indigo-300">${student.class}</span>
                 </div>
             `).join('');
         }
 
-        // Delete Student
         function deleteStudent(id) {
-            appData.students = appData.students.filter(s => s.id !== id);
-            saveData();
-            filterStudents();
-            showToast('Student removed');
+            if (confirm('Delete this student?')) {
+                appData.students = appData.students.filter(s => s.id !== id);
+                saveData();
+                filterStudents();
+                showToast('Student removed');
+            }
+        }
+
+        function clearAllStudents() {
+            if (confirm('Delete ALL students? This cannot be undone!')) {
+                appData.students = [];
+                saveData();
+                filterStudents();
+                updateUI();
+                showToast('All students cleared');
+            }
         }
 
         // Update History Tab
         function updateHistoryTab() {
             updateClassDropdowns();
-            const list = document.getElementById('historyList');
+            filterHistory();
+        }
+
+        function filterHistory() {
+            const dateFilter = document.getElementById('historyDate').value;
+            const classFilter = document.getElementById('historyClass').value;
             
-            if (appData.attendanceRecords.length === 0) {
+            let filtered = [...appData.attendanceRecords].reverse();
+            
+            if (dateFilter) {
+                filtered = filtered.filter(r => new Date(r.date).toISOString().split('T')[0] === dateFilter);
+            }
+            if (classFilter) {
+                filtered = filtered.filter(r => r.class === classFilter);
+            }
+
+            const list = document.getElementById('historyList');
+            if (filtered.length === 0) {
                 list.innerHTML = '<p class="text-gray-400 text-center py-8">No attendance records found.</p>';
                 return;
             }
 
-            const sorted = [...appData.attendanceRecords].reverse();
-            list.innerHTML = sorted.map(record => {
+            list.innerHTML = filtered.map(record => {
                 const date = new Date(record.date);
                 const percentage = ((record.presentCount / record.totalStudents) * 100).toFixed(1);
                 
                 return `
-                    <div class="glass-dark rounded-xl p-4">
+                    <div class="glass-dark rounded-xl p-4 group">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                            <div>
-                                <div class="flex items-center gap-3 mb-2">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-3 mb-2 flex-wrap">
                                     <span class="text-lg font-semibold">${record.subject}</span>
                                     <span class="px-2 py-1 rounded-lg text-xs bg-indigo-500/20 text-indigo-300">${record.class}</span>
+                                    <span class="px-2 py-1 rounded-lg text-xs bg-purple-500/20 text-purple-300">Hour ${record.hour || '-'}</span>
                                 </div>
                                 <p class="text-sm text-gray-400">
                                     <i class="fas fa-calendar mr-1"></i>${date.toLocaleDateString()}
@@ -1088,7 +1494,7 @@
                                     <i class="fas fa-user mr-1"></i>${record.lecturer || 'N/A'}
                                 </p>
                             </div>
-                            <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-6">
                                 <div class="text-center">
                                     <span class="text-2xl font-bold text-green-400">${record.presentCount}</span>
                                     <p class="text-xs text-gray-400">Present</p>
@@ -1100,6 +1506,9 @@
                                 <div class="w-16 h-16 rounded-full border-4 ${percentage >= 75 ? 'border-green-500' : 'border-red-500'} flex items-center justify-center">
                                     <span class="text-sm font-bold">${percentage}%</span>
                                 </div>
+                                <button onclick="deleteRecord(${record.id})" class="w-10 h-10 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-red-400 opacity-0 group-hover:opacity-100 transition">
+                                    <i class="fas fa-trash"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1107,9 +1516,35 @@
             }).join('');
         }
 
+        function deleteRecord(id) {
+            if (confirm('Delete this record?')) {
+                appData.attendanceRecords = appData.attendanceRecords.filter(r => r.id !== id);
+                saveData();
+                filterHistory();
+                showToast('Record deleted');
+            }
+        }
+
+        function clearHistory() {
+            if (confirm('Clear ALL attendance history?')) {
+                appData.attendanceRecords = [];
+                saveData();
+                filterHistory();
+                showToast('History cleared');
+            }
+        }
+
+        function clearAllData() {
+            if (confirm('⚠️ This will DELETE ALL DATA including students, timetable, and history. Continue?')) {
+                localStorage.removeItem('attendEaseData');
+                appData = { students: [], classes: [], timetable: [], attendanceRecords: [], currentAttendance: {}, selectionMode: 'present' };
+                updateUI();
+                showToast('All data cleared');
+            }
+        }
+
         // Update UI
         function updateUI() {
-            // Dashboard stats
             document.getElementById('totalStudents').textContent = appData.students.length;
             
             const today = new Date().toDateString();
@@ -1124,20 +1559,16 @@
             document.getElementById('todayPresent').textContent = todayPresent;
             document.getElementById('todayAbsent').textContent = todayAbsent;
 
-            // Today's classes
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const todayDay = days[new Date().getDay()];
             const todayClasses = appData.timetable.filter(c => c.day === todayDay);
             document.getElementById('totalClasses').textContent = todayClasses.length;
 
-            // Current class card
             updateCurrentClassCard(todayClasses);
-
             updateClassDropdowns();
             updateTimetableGrid();
         }
 
-        // Update Current Class Card
         function updateCurrentClassCard(todayClasses) {
             const card = document.getElementById('currentClassCard');
             if (todayClasses.length === 0) {
@@ -1147,11 +1578,10 @@
 
             const now = new Date();
             const currentTime = now.getHours() * 60 + now.getMinutes();
+            let currentClass = null, nextClass = null;
 
-            let currentClass = null;
-            let nextClass = null;
-
-            for (const cls of todayClasses.sort((a, b) => a.startTime.localeCompare(b.startTime))) {
+            for (const cls of todayClasses.sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''))) {
+                if (!cls.startTime || !cls.endTime) continue;
                 const [startH, startM] = cls.startTime.split(':').map(Number);
                 const [endH, endM] = cls.endTime.split(':').map(Number);
                 const startMin = startH * 60 + startM;
@@ -1172,9 +1602,9 @@
             }
 
             card.innerHTML = `
-                <div class="flex items-center justify-between">
+                <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div>
-                        <span class="px-3 py-1 rounded-full text-xs ${currentClass ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'} mb-3 inline-block">
+                        <span class="px-3 py-1 rounded-full text-xs ${currentClass ? 'bg-green-500/20 text-green-400 pulse' : 'bg-yellow-500/20 text-yellow-400'} mb-3 inline-block">
                             ${currentClass ? '🔴 LIVE NOW' : '⏰ UP NEXT'}
                         </span>
                         <h3 class="text-2xl font-bold mb-2">${displayClass.subject}</h3>
@@ -1184,26 +1614,17 @@
                             <i class="fas fa-user mr-1"></i>${displayClass.lecturer}
                         </p>
                     </div>
-                    <div class="text-right">
-                        <p class="text-3xl font-bold text-indigo-400">${displayClass.startTime}</p>
-                        <p class="text-gray-400">to ${displayClass.endTime}</p>
-                        <button onclick="showTab('attendance'); document.getElementById('attendanceClass').value='${displayClass.name}'; loadStudentsForAttendance();" class="mt-3 btn-gradient px-4 py-2 rounded-lg text-sm font-medium">
-                            Take Attendance
+                    <div class="text-left md:text-right">
+                        <p class="text-3xl font-bold text-indigo-400">${displayClass.startTime || '--:--'}</p>
+                        <p class="text-gray-400">to ${displayClass.endTime || '--:--'}</p>
+                        <button onclick="showTab('attendance'); document.getElementById('attendanceClass').value='${displayClass.name}'; loadStudentsForAttendance();" 
+                                class="mt-3 btn-gradient px-4 py-2 rounded-lg text-sm font-medium">
+                            <i class="fas fa-user-check mr-2"></i>Take Attendance
                         </button>
                     </div>
                 </div>
             `;
         }
-
-        // Search in attendance
-        document.getElementById('searchStudent')?.addEventListener('keyup', function() {
-            const term = this.value.toLowerCase();
-            document.querySelectorAll('.student-card').forEach(card => {
-                const name = card.querySelector('h4').textContent.toLowerCase();
-                const roll = card.querySelector('p').textContent.toLowerCase();
-                card.style.display = (name.includes(term) || roll.includes(term)) ? 'flex' : 'none';
-            });
-        });
 
         // Initialize
         loadData();
