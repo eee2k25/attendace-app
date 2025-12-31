@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AttendEase - College Attendance System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .glass-dark {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+        }
+        
+        .gradient-card {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.2) 0%, rgba(168, 85, 247, 0.2) 100%);
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        }
+        
+        .btn-gradient:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .student-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .student-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .student-card.present {
+            border-left: 4px solid #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .student-card.absent {
+            border-left: 4px solid #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+        
+        .tab-active {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+        }
+        
+        .floating-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.5;
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .toggle-switch {
+            width: 50px;
+            height: 26px;
+            background: #374151;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .toggle-switch.active {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+        
+        .toggle-switch.active::after {
+            left: 26px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-label {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen text-white overflow-x-hidden">
+    <!-- Floating Orbs -->
+    <div class="floating-orb w-72 h-72 bg-purple-500 top-20 -left-20 fixed"></div>
+    <div class="floating-orb w-96 h-96 bg-indigo-500 bottom-20 -right-20 fixed" style="animation-delay: -3s;"></div>
+    <div class="floating-orb w-64 h-64 bg-pink-500 top-1/2 left-1/2 fixed" style="animation-delay: -1.5s;"></div>
+
+    <!-- Main Container -->
+    <div class="relative z-10 min-h-screen">
+        <!-- Header -->
+        <header class="glass sticky top-0 z-50 px-6 py-4">
+            <div class="max-w-7xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 btn-gradient rounded-xl flex items-center justify-center">
+                        <i class="fas fa-clipboard-check text-lg"></i>
+                    </div>
+                    <h1 class="text-xl font-bold">AttendEase</h1>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span class="text-sm text-gray-300" id="currentDateTime"></span>
+                    <div class="w-10 h-10 glass rounded-full flex items-center justify-center cursor-pointer hover:bg-white/20 transition">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="px-6 py-4">
+            <div class="max-w-7xl mx-auto">
+                <div class="glass rounded-2xl p-2 flex gap-2 overflow-x-auto scrollbar-hide">
+                    <button onclick="showTab('dashboard')" class="tab-btn tab-active px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap" data-tab="dashboard">
+                        <i class="fas fa-home mr-2"></i>Dashboard
+                    </button>
+                    <button onclick="showTab('attendance')" class="tab-btn px-6 py-3 rounded-xl font-medium transition-all hover:bg-white/10 whitespace-nowrap" data-tab="attendance">
+                        <i class="fas fa-user-check mr-2"></i>Take Attendance
+                    </button>
+                    <button onclick="showTab('timetable')" class="tab-btn px-6 py-3 rounded-xl font-medium transition-all hover:bg-white/10 whitespace-nowrap" data-tab="timetable">
+                        <i class="fas fa-calendar-alt mr-2"></i>Timetable
+                    </button>
+                    <button onclick="showTab('students')" class="tab-btn px-6 py-3 rounded-xl font-medium transition-all hover:bg-white/10 whitespace-nowrap" data-tab="students">
+                        <i class="fas fa-users mr-2"></i>Students
+                    </button>
+                    <button onclick="showTab('history')" class="tab-btn px-6 py-3 rounded-xl font-medium transition-all hover:bg-white/10 whitespace-nowrap" data-tab="history">
+                        <i class="fas fa-history mr-2"></i>History
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Content Area -->
+        <main class="px-6 pb-8">
+            <div class="max-w-7xl mx-auto">
+                
+                <!-- Dashboard Tab -->
+                <div id="dashboard" class="tab-content slide-in">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="glass rounded-2xl p-6 gradient-card">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-indigo-500/30 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-users text-indigo-400 text-xl"></i>
+                                </div>
+                                <span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded-full">Active</span>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-1" id="totalStudents">0</h3>
+                            <p class="text-gray-400 text-sm">Total Students</p>
+                        </div>
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-green-500/30 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-green-400 text-xl"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-1" id="todayPresent">0</h3>
+                            <p class="text-gray-400 text-sm">Present Today</p>
+                        </div>
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-red-500/30 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-times-circle text-red-400 text-xl"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-1" id="todayAbsent">0</h3>
+                            <p class="text-gray-400 text-sm">Absent Today</p>
+                        </div>
+                        <div class="glass rounded-2xl p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="w-12 h-12 bg-purple-500/30 rounded-xl flex items-center justify-center">
+                                    <i class="fas fa-book text-purple-400 text-xl"></i>
+                                </div>
+                            </div>
+                            <h3 class="text-3xl font-bold mb-1" id="totalClasses">0</h3>
+                            <p class="text-gray-400 text-sm">Classes Today</p>
+                        </div>
+                    </div>
+
+                    <!-- Current Class Card -->
+                    <div class="glass rounded-2xl p-6 mb-6">
+                        <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                            <i class="fas fa-clock text-indigo-400"></i>
+                            Current / Next Class
+                        </h2>
+                        <div id="currentClassCard" class="gradient-card rounded-xl p-6">
+                            <p class="text-gray-400">No classes scheduled. Add your timetable to get started.</p>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="glass rounded-2xl p-6">
+                        <h2 class="text-lg font-semibold mb-4">Quick Actions</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <button onclick="showTab('attendance')" class="glass-dark rounded-xl p-4 text-center hover:bg-white/10 transition group">
+                                <div class="w-12 h-12 btn-gradient rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <span class="text-sm">Take Attendance</span>
+                            </button>
+                            <button onclick="showTab('students')" class="glass-dark rounded-xl p-4 text-center hover:bg-white/10 transition group">
+                                <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
+                                    <i class="fas fa-file-excel"></i>
+                                </div>
+                                <span class="text-sm">Import Students</span>
+                            </button>
+                            <button onclick="showTab('timetable')" class="glass-dark rounded-xl p-4 text-center hover:bg-white/10 transition group">
+                                <div class="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
+                                    <i class="fas fa-calendar-plus"></i>
+                                </div>
+                                <span class="text-sm">Add Timetable</span>
+                            </button>
+                            <button onclick="showTab('history')" class="glass-dark rounded-xl p-4 text-center hover:bg-white/10 transition group">
+                                <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition">
+                                    <i class="fas fa-chart-bar"></i>
+                                </div>
+                                <span class="text-sm">View Reports</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Tab -->
+                <div id="attendance" class="tab-content hidden">
+                    <div class="glass rounded-2xl p-6 mb-6">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h2 class="text-xl font-bold mb-1">Take Attendance</h2>
+                                <p class="text-gray-400 text-sm">Mark students as present or absent</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-2 glass-dark px-4 py-2 rounded-xl">
+                                    <span class="text-sm text-gray-400">Default:</span>
+                                    <button onclick="setDefaultStatus('present')" id="defaultPresent" class="px-3 py-1 rounded-lg text-sm btn-success text-white">Present</button>
+                                    <button onclick="setDefaultStatus('absent')" id="defaultAbsent" class="px-3 py-1 rounded-lg text-sm bg-gray-600 text-white">Absent</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Class Selection -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Select Class</label>
+                                <select id="attendanceClass" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Choose a class</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Subject / Period</label>
+                                <select id="attendanceSubject" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                    <option value="">Choose subject</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm text-gray-400 mb-2">Lecturer</label>
+                                <input type="text" id="lecturerName" placeholder="Enter lecturer name" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- Search & Actions -->
+                        <div class="flex flex-col md:flex-row gap-4 mb-6">
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" id="searchStudent" placeholder="Search students..." class="w-full glass-dark rounded-xl pl-12 pr-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <button onclick="markAllPresent()" class="btn-success px-6 py-3 rounded-xl font-medium hover:opacity-90 transition">
+                                <i class="fas fa-check-double mr-2"></i>All Present
+                            </button>
+                            <button onclick="markAllAbsent()" class="btn-danger px-6 py-3 rounded-xl font-medium hover:opacity-90 transition">
+                                <i class="fas fa-times mr-2"></i>All Absent
+                            </button>
+                        </div>
+
+                        <!-- Students List -->
+                        <div id="attendanceList" class="space-y-3 max-h-96 overflow-y-auto scrollbar-hide">
+                            <p class="text-gray-400 text-center py-8">Select a class to view students</p>
+                        </div>
+                    </div>
+
+                    <!-- Submit Attendance -->
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div id="attendanceSummary" class="text-gray-400">
+                                <span>Select students to see summary</span>
+                            </div>
+                            <div class="flex gap-3">
+                                <button onclick="submitAttendance()" class="btn-gradient px-8 py-3 rounded-xl font-medium hover:opacity-90 transition">
+                                    <i class="fas fa-save mr-2"></i>Save Attendance
+                                </button>
+                                <button onclick="shareToWhatsApp()" class="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-xl font-medium transition">
+                                    <i class="fab fa-whatsapp mr-2 text-lg"></i>Share to WhatsApp
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Timetable Tab -->
+                <div id="timetable" class="tab-content hidden">
+                    <div class="glass rounded-2xl p-6 mb-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-xl font-bold mb-1">Timetable Management</h2>
+                                <p class="text-gray-400 text-sm">Manage your class schedule</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <label class="file-upload-label glass-dark px-4 py-2 rounded-xl hover:bg-white/10 transition cursor-pointer">
+                                    <i class="fas fa-file-excel mr-2 text-green-400"></i>Import Excel
+                                    <input type="file" id="timetableExcel" accept=".xlsx,.xls" onchange="importTimetable(event)">
+                                </label>
+                                <button onclick="showAddClassModal()" class="btn-gradient px-4 py-2 rounded-xl font-medium">
+                                    <i class="fas fa-plus mr-2"></i>Add Class
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Day Selection -->
+                        <div class="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-2">
+                            <button onclick="selectDay('Monday')" class="day-btn px-6 py-2 rounded-xl font-medium transition bg-indigo-500" data-day="Monday">Mon</button>
+                            <button onclick="selectDay('Tuesday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Tuesday">Tue</button>
+                            <button onclick="selectDay('Wednesday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Wednesday">Wed</button>
+                            <button onclick="selectDay('Thursday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Thursday">Thu</button>
+                            <button onclick="selectDay('Friday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Friday">Fri</button>
+                            <button onclick="selectDay('Saturday')" class="day-btn px-6 py-2 rounded-xl font-medium transition glass-dark hover:bg-white/10" data-day="Saturday">Sat</button>
+                        </div>
+
+                        <!-- Timetable Grid -->
+                        <div id="timetableGrid" class="space-y-3">
+                            <p class="text-gray-400 text-center py-8">No classes scheduled for this day. Add classes to get started.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Tab -->
+                <div id="students" class="tab-content hidden">
+                    <div class="glass rounded-2xl p-6 mb-6">
+                        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+                            <div>
+                                <h2 class="text-xl font-bold mb-1">Student Management</h2>
+                                <p class="text-gray-400 text-sm">Add, import, or manage student lists</p>
+                            </div>
+                            <div class="flex flex-wrap gap-3">
+                                <label class="file-upload-label btn-success px-4 py-2 rounded-xl font-medium cursor-pointer hover:opacity-90 transition">
+                                    <i class="fas fa-file-excel mr-2"></i>Import from Excel
+                                    <input type="file" id="studentExcel" accept=".xlsx,.xls" onchange="importStudents(event)">
+                                </label>
+                                <button onclick="showAddStudentModal()" class="btn-gradient px-4 py-2 rounded-xl font-medium">
+                                    <i class="fas fa-user-plus mr-2"></i>Add Student
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Class Filter -->
+                        <div class="flex flex-col md:flex-row gap-4 mb-6">
+                            <select id="filterClass" onchange="filterStudents()" class="glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="">All Classes</option>
+                            </select>
+                            <div class="flex-1 relative">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                                <input type="text" id="searchStudentList" onkeyup="filterStudents()" placeholder="Search by name or roll number..." class="w-full glass-dark rounded-xl pl-12 pr-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+
+                        <!-- Students Grid -->
+                        <div id="studentsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <p class="text-gray-400 text-center py-8 col-span-full">No students added yet. Import from Excel or add manually.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Tab -->
+                <div id="history" class="tab-content hidden">
+                    <div class="glass rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="text-xl font-bold mb-1">Attendance History</h2>
+                                <p class="text-gray-400 text-sm">View past attendance records</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <input type="date" id="historyDate" class="glass-dark rounded-xl px-4 py-2 bg-transparent focus:outline-none">
+                                <select id="historyClass" class="glass-dark rounded-xl px-4 py-2 bg-transparent focus:outline-none">
+                                    <option value="">All Classes</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="historyList" class="space-y-4">
+                            <p class="text-gray-400 text-center py-8">No attendance records found.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Class Modal -->
+    <div id="addClassModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="glass rounded-2xl p-6 w-full max-w-md slide-in">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Add New Class</h3>
+                <button onclick="closeModal('addClassModal')" class="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form onsubmit="addClass(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Class Name</label>
+                    <input type="text" id="className" required placeholder="e.g., CSE-A 3rd Year" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Subject</label>
+                    <input type="text" id="subjectName" required placeholder="e.g., Data Structures" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">Start Time</label>
+                        <input type="time" id="startTime" required class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-2">End Time</label>
+                        <input type="time" id="endTime" required class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Lecturer</label>
+                    <input type="text" id="classLecturer" required placeholder="e.g., Dr. Smith" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Day</label>
+                    <select id="classDay" required class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full btn-gradient py-3 rounded-xl font-medium">
+                    <i class="fas fa-plus mr-2"></i>Add Class
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div id="addStudentModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div class="glass rounded-2xl p-6 w-full max-w-md slide-in">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold">Add New Student</h3>
+                <button onclick="closeModal('addStudentModal')" class="w-8 h-8 rounded-lg hover:bg-white/10 flex items-center justify-center">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form onsubmit="addStudent(event)" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Roll Number</label>
+                    <input type="text" id="studentRoll" required placeholder="e.g., 21CS101" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Student Name</label>
+                    <input type="text" id="studentName" required placeholder="e.g., John Doe" class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Class</label>
+                    <select id="studentClass" required class="w-full glass-dark rounded-xl px-4 py-3 bg-transparent focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">Select Class</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full btn-gradient py-3 rounded-xl font-medium">
+                    <i class="fas fa-user-plus mr-2"></i>Add Student
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 hidden">
+        <div class="glass rounded-xl px-6 py-4 flex items-center gap-3 slide-in">
+            <i id="toastIcon" class="fas fa-check-circle text-green-400 text-xl"></i>
+            <span id="toastMessage">Operation successful!</span>
+        </div>
+    </div>
+
+    <script>
+        // Data Store
+        let appData = {
+            students: [],
+            classes: [],
+            timetable: [],
+            attendanceRecords: [],
+            defaultStatus: 'present',
+            currentAttendance: {}
+        };
+
+        // Load data from localStorage
+        function loadData() {
+            const saved = localStorage.getItem('attendEaseData');
+            if (saved) {
+                appData = JSON.parse(saved);
+            }
+            updateUI();
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('attendEaseData', JSON.stringify(appData));
+        }
+
+        // Update DateTime
+        function updateDateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            document.getElementById('currentDateTime').textContent = now.toLocaleDateString('en-US', options);
+        }
+        setInterval(updateDateTime, 1000);
+        updateDateTime();
+
+        // Tab Navigation
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('hover:bg-white/10');
+            });
+            
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('tab-active');
+            document.querySelector(`[data-tab="${tabId}"]`).classList.remove('hover:bg-white/10');
+
+            if (tabId === 'attendance') updateAttendanceTab();
+            if (tabId === 'students') updateStudentsTab();
+            if (tabId === 'history') updateHistoryTab();
+        }
+
+        // Modal Functions
+        function showAddClassModal() {
+            document.getElementById('addClassModal').classList.remove('hidden');
+            document.getElementById('addClassModal').classList.add('flex');
+        }
+
+        function showAddStudentModal() {
+            updateClassDropdowns();
+            document.getElementById('addStudentModal').classList.remove('hidden');
+            document.getElementById('addStudentModal').classList.add('flex');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+            document.getElementById(modalId).classList.remove('flex');
+        }
+
+        // Toast Notification
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toastIcon');
+            const msg = document.getElementById('toastMessage');
+            
+            msg.textContent = message;
+            icon.className = type === 'success' ? 'fas fa-check-circle text-green-400 text-xl' : 'fas fa-exclamation-circle text-red-400 text-xl';
+            
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3000);
+        }
+
+        // Add Class
+        function addClass(e) {
+            e.preventDefault();
+            const newClass = {
+                id: Date.now(),
+                name: document.getElementById('className').value,
+                subject: document.getElementById('subjectName').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                lecturer: document.getElementById('classLecturer').value,
+                day: document.getElementById('classDay').value
+            };
+            
+            appData.timetable.push(newClass);
+            if (!appData.classes.includes(newClass.name)) {
+                appData.classes.push(newClass.name);
+            }
+            
+            saveData();
+            closeModal('addClassModal');
+            updateTimetableGrid();
+            updateClassDropdowns();
+            showToast('Class added successfully!');
+            e.target.reset();
+        }
+
+        // Add Student
+        function addStudent(e) {
+            e.preventDefault();
+            const newStudent = {
+                id: Date.now(),
+                roll: document.getElementById('studentRoll').value,
+                name: document.getElementById('studentName').value,
+                class: document.getElementById('studentClass').value
+            };
+            
+            appData.students.push(newStudent);
+            saveData();
+            closeModal('addStudentModal');
+            updateStudentsTab();
+            showToast('Student added successfully!');
+            e.target.reset();
+        }
+
+        // Import Students from Excel
+        function importStudents(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+
+                json.forEach(row => {
+                    const student = {
+                        id: Date.now() + Math.random(),
+                        roll: row['Roll Number'] || row['roll'] || row['Roll'] || '',
+                        name: row['Name'] || row['name'] || row['Student Name'] || '',
+                        class: row['Class'] || row['class'] || row['Section'] || ''
+                    };
+                    if (student.roll && student.name) {
+                        appData.students.push(student);
+                        if (student.class && !appData.classes.includes(student.class)) {
+                            appData.classes.push(student.class);
+                        }
+                    }
+                });
+
+                saveData();
+                updateStudentsTab();
+                updateClassDropdowns();
+                showToast(`Imported ${json.length} students successfully!`);
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        // Import Timetable from Excel
+        function importTimetable(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(sheet);
+
+                json.forEach(row => {
+                    const classItem = {
+                        id: Date.now() + Math.random(),
+                        name: row['Class'] || row['class'] || '',
+                        subject: row['Subject'] || row['subject'] || '',
+                        startTime: row['Start Time'] || row['startTime'] || '',
+                        endTime: row['End Time'] || row['endTime'] || '',
+                        lecturer: row['Lecturer'] || row['lecturer'] || row['Teacher'] || '',
+                        day: row['Day'] || row['day'] || ''
+                    };
+                    if (classItem.name && classItem.subject) {
+                        appData.timetable.push(classItem);
+                        if (!appData.classes.includes(classItem.name)) {
+                            appData.classes.push(classItem.name);
+                        }
+                    }
+                });
+
+                saveData();
+                updateTimetableGrid();
+                updateClassDropdowns();
+                showToast(`Imported ${json.length} classes successfully!`);
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        // Update Class Dropdowns
+        function updateClassDropdowns() {
+            const dropdowns = ['attendanceClass', 'filterClass', 'studentClass', 'historyClass'];
+            dropdowns.forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    const currentValue = select.value;
+                    select.innerHTML = '<option value="">Select Class</option>';
+                    appData.classes.forEach(cls => {
+                        select.innerHTML += `<option value="${cls}">${cls}</option>`;
+                    });
+                    select.value = currentValue;
+                }
+            });
+        }
+
+        // Day Selection
+        let selectedDay = 'Monday';
+        function selectDay(day) {
+            selectedDay = day;
+            document.querySelectorAll('.day-btn').forEach(btn => {
+                btn.classList.remove('bg-indigo-500');
+                btn.classList.add('glass-dark', 'hover:bg-white/10');
+            });
+            document.querySelector(`[data-day="${day}"]`).classList.add('bg-indigo-500');
+            document.querySelector(`[data-day="${day}"]`).classList.remove('glass-dark', 'hover:bg-white/10');
+            updateTimetableGrid();
+        }
+
+        // Update Timetable Grid
+        function updateTimetableGrid() {
+            const grid = document.getElementById('timetableGrid');
+            const dayClasses = appData.timetable.filter(c => c.day === selectedDay).sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+            if (dayClasses.length === 0) {
+                grid.innerHTML = '<p class="text-gray-400 text-center py-8">No classes scheduled for this day.</p>';
+                return;
+            }
+
+            grid.innerHTML = dayClasses.map(cls => `
+                <div class="glass-dark rounded-xl p-4 flex items-center justify-between group">
+                    <div class="flex items-center gap-4">
+                        <div class="w-16 text-center">
+                            <span class="text-lg font-bold text-indigo-400">${cls.startTime}</span>
+                            <p class="text-xs text-gray-500">${cls.endTime}</p>
+                        </div>
+                        <div class="w-1 h-12 bg-gradient-to-b from-indigo-500 to-purple-500 rounded-full"></div>
+                        <div>
+                            <h4 class="font-semibold">${cls.subject}</h4>
+                            <p class="text-sm text-gray-400">${cls.name} • ${cls.lecturer}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                        <button onclick="deleteClass(${cls.id})" class="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-red-400">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Delete Class
+        function deleteClass(id) {
+            appData.timetable = appData.timetable.filter(c => c.id !== id);
+            saveData();
+            updateTimetableGrid();
+            showToast('Class deleted');
+        }
+
+        // Update Attendance Tab
+        function updateAttendanceTab() {
+            updateClassDropdowns();
+            const classSelect = document.getElementById('attendanceClass');
+            classSelect.onchange = loadStudentsForAttendance;
+
+            // Load subjects based on timetable
+            const subjectSelect = document.getElementById('attendanceSubject');
+            subjectSelect.innerHTML = '<option value="">Choose subject</option>';
+            const uniqueSubjects = [...new Set(appData.timetable.map(t => t.subject))];
+            uniqueSubjects.forEach(sub => {
+                subjectSelect.innerHTML += `<option value="${sub}">${sub}</option>`;
+            });
+        }
+
+        // Load Students for Attendance
+        function loadStudentsForAttendance() {
+            const selectedClass = document.getElementById('attendanceClass').value;
+            const list = document.getElementById('attendanceList');
+            
+            if (!selectedClass) {
+                list.innerHTML = '<p class="text-gray-400 text-center py-8">Select a class to view students</p>';
+                return;
+            }
+
+            const students = appData.students.filter(s => s.class === selectedClass);
+            
+            if (students.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-center py-8">No students in this class</p>';
+                return;
+            }
+
+            // Initialize attendance
+            students.forEach(s => {
+                if (appData.currentAttendance[s.id] === undefined) {
+                    appData.currentAttendance[s.id] = appData.defaultStatus === 'present';
+                }
+            });
+
+            renderAttendanceList(students);
+        }
+
+        // Render Attendance List
+        function renderAttendanceList(students) {
+            const list = document.getElementById('attendanceList');
+            list.innerHTML = students.map(student => {
+                const isPresent = appData.currentAttendance[student.id];
+                return `
+                    <div class="student-card glass-dark rounded-xl p-4 flex items-center justify-between ${isPresent ? 'present' : 'absent'}" data-id="${student.id}">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold">
+                                ${student.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h4 class="font-medium">${student.name}</h4>
+                                <p class="text-sm text-gray-400">${student.roll}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm ${isPresent ? 'text-green-400' : 'text-red-400'}">${isPresent ? 'Present' : 'Absent'}</span>
+                            <div class="toggle-switch ${isPresent ? 'active' : ''}" onclick="toggleAttendance(${student.id})"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateAttendanceSummary();
+        }
+
+        // Toggle Attendance
+        function toggleAttendance(studentId) {
+            appData.currentAttendance[studentId] = !appData.currentAttendance[studentId];
+            loadStudentsForAttendance();
+        }
+
+        // Mark All Present/Absent
+        function markAllPresent() {
+            const selectedClass = document.getElementById('attendanceClass').value;
+            const students = appData.students.filter(s => s.class === selectedClass);
+            students.forEach(s => appData.currentAttendance[s.id] = true);
+            loadStudentsForAttendance();
+        }
+
+        function markAllAbsent() {
+            const selectedClass = document.getElementById('attendanceClass').value;
+            const students = appData.students.filter(s => s.class === selectedClass);
+            students.forEach(s => appData.currentAttendance[s.id] = false);
+            loadStudentsForAttendance();
+        }
+
+        // Set Default Status
+        function setDefaultStatus(status) {
+            appData.defaultStatus = status;
+            if (status === 'present') {
+                document.getElementById('defaultPresent').className = 'px-3 py-1 rounded-lg text-sm btn-success text-white';
+                document.getElementById('defaultAbsent').className = 'px-3 py-1 rounded-lg text-sm bg-gray-600 text-white';
+            } else {
+                document.getElementById('defaultAbsent').className = 'px-3 py-1 rounded-lg text-sm btn-danger text-white';
+                document.getElementById('defaultPresent').className = 'px-3 py-1 rounded-lg text-sm bg-gray-600 text-white';
+            }
+        }
+
+        // Update Attendance Summary
+        function updateAttendanceSummary() {
+            const selectedClass = document.getElementById('attendanceClass').value;
+            const students = appData.students.filter(s => s.class === selectedClass);
+            const present = students.filter(s => appData.currentAttendance[s.id]).length;
+            const absent = students.length - present;
+            
+            document.getElementById('attendanceSummary').innerHTML = `
+                <span class="text-green-400"><i class="fas fa-check-circle mr-1"></i>${present} Present</span>
+                <span class="mx-3">|</span>
+                <span class="text-red-400"><i class="fas fa-times-circle mr-1"></i>${absent} Absent</span>
+                <span class="mx-3">|</span>
+                <span class="text-gray-300">Total: ${students.length}</span>
+            `;
+        }
+
+        // Submit Attendance
+        function submitAttendance() {
+            const selectedClass = document.getElementById('attendanceClass').value;
+            const subject = document.getElementById('attendanceSubject').value;
+            const lecturer = document.getElementById('lecturerName').value;
+
+            if (!selectedClass || !subject) {
+                showToast('Please select class and subject', 'error');
+                return;
+            }
+
+            const students = appData.students.filter(s => s.class === selectedClass);
+            const presentStudents = students.filter(s => appData.currentAttendance[s.id]);
+            const absentStudents = students.filter(s => !appData.currentAttendance[s.id]);
+
+            const record = {
+                id: Date.now(),
+                date: new Date().toISOString(),
+                class: selectedClass,
+                subject: subject,
+                lecturer: lecturer,
+                totalStudents: students.length,
+                presentCount: presentStudents.length,
+                absentCount: absentStudents.length,
+                presentList: presentStudents.map(s => ({ roll: s.roll, name: s.name })),
+                absentList: absentStudents.map(s => ({ roll: s.roll, name: s.name }))
+            };
+
+            appData.attendanceRecords.push(record);
+            appData.currentAttendance = {};
+            saveData();
+            updateUI();
+            showToast('Attendance saved successfully!');
+        }
+
+        // Share to WhatsApp
+        function shareToWhatsApp() {
+            const selectedClass = document.getElementById('attendanceClass').value;
+            const subject = document.getElementById('attendanceSubject').value;
+            const lecturer = document.getElementById('lecturerName').value;
+
+            if (!selectedClass || !subject) {
+                showToast('Please select class and subject', 'error');
+                return;
+            }
+
+            const students = appData.students.filter(s => s.class === selectedClass);
+            const presentStudents = students.filter(s => appData.currentAttendance[s.id]);
+            const absentStudents = students.filter(s => !appData.currentAttendance[s.id]);
+
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+            let message = `📋 *ATTENDANCE REPORT*\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n\n`;
+            message += `📅 *Date:* ${dateStr}\n`;
+            message += `⏰ *Time:* ${timeStr}\n`;
+            message += `🏫 *Class:* ${selectedClass}\n`;
+            message += `📚 *Subject:* ${subject}\n`;
+            message += `👨‍🏫 *Lecturer:* ${lecturer || 'N/A'}\n\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n`;
+            message += `📊 *SUMMARY*\n`;
+            message += `━━━━━━━━━━━━━━━━━━\n\n`;
+            message += `✅ Present: ${presentStudents.length}\n`;
+            message += `❌ Absent: ${absentStudents.length}\n`;
+            message += `📝 Total: ${students.length}\n`;
+            message += `📈 Attendance: ${((presentStudents.length / students.length) * 100).toFixed(1)}%\n\n`;
+
+            if (absentStudents.length > 0) {
+                message += `━━━━━━━━━━━━━━━━━━\n`;
+                message += `❌ *ABSENTEES*\n`;
+                message += `━━━━━━━━━━━━━━━━━━\n\n`;
+                absentStudents.forEach((s, i) => {
+                    message += `${i + 1}. ${s.roll} - ${s.name}\n`;
+                });
+            }
+
+            message += `\n_Generated by AttendEase_`;
+
+            const encodedMessage = encodeURIComponent(message);
+            window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+        }
+
+        // Update Students Tab
+        function updateStudentsTab() {
+            updateClassDropdowns();
+            filterStudents();
+        }
+
+        // Filter Students
+        function filterStudents() {
+            const classFilter = document.getElementById('filterClass').value;
+            const searchTerm = document.getElementById('searchStudentList').value.toLowerCase();
+
+            let filtered = appData.students;
+            if (classFilter) {
+                filtered = filtered.filter(s => s.class === classFilter);
+            }
+            if (searchTerm) {
+                filtered = filtered.filter(s => 
+                    s.name.toLowerCase().includes(searchTerm) || 
+                    s.roll.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            const list = document.getElementById('studentsList');
+            if (filtered.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-center py-8 col-span-full">No students found</p>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(student => `
+                <div class="glass-dark rounded-xl p-4 group">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center font-bold text-lg">
+                            ${student.name.charAt(0)}
+                        </div>
+                        <button onclick="deleteStudent(${student.id})" class="w-8 h-8 rounded-lg hover:bg-red-500/20 flex items-center justify-center text-red-400 opacity-0 group-hover:opacity-100 transition">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <h4 class="font-semibold">${student.name}</h4>
+                    <p class="text-sm text-gray-400">${student.roll}</p>
+                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs bg-indigo-500/20 text-indigo-300">${student.class}</span>
+                </div>
+            `).join('');
+        }
+
+        // Delete Student
+        function deleteStudent(id) {
+            appData.students = appData.students.filter(s => s.id !== id);
+            saveData();
+            filterStudents();
+            showToast('Student removed');
+        }
+
+        // Update History Tab
+        function updateHistoryTab() {
+            updateClassDropdowns();
+            const list = document.getElementById('historyList');
+            
+            if (appData.attendanceRecords.length === 0) {
+                list.innerHTML = '<p class="text-gray-400 text-center py-8">No attendance records found.</p>';
+                return;
+            }
+
+            const sorted = [...appData.attendanceRecords].reverse();
+            list.innerHTML = sorted.map(record => {
+                const date = new Date(record.date);
+                const percentage = ((record.presentCount / record.totalStudents) * 100).toFixed(1);
+                
+                return `
+                    <div class="glass-dark rounded-xl p-4">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div>
+                                <div class="flex items-center gap-3 mb-2">
+                                    <span class="text-lg font-semibold">${record.subject}</span>
+                                    <span class="px-2 py-1 rounded-lg text-xs bg-indigo-500/20 text-indigo-300">${record.class}</span>
+                                </div>
+                                <p class="text-sm text-gray-400">
+                                    <i class="fas fa-calendar mr-1"></i>${date.toLocaleDateString()}
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-clock mr-1"></i>${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                                    <span class="mx-2">•</span>
+                                    <i class="fas fa-user mr-1"></i>${record.lecturer || 'N/A'}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-4">
+                                <div class="text-center">
+                                    <span class="text-2xl font-bold text-green-400">${record.presentCount}</span>
+                                    <p class="text-xs text-gray-400">Present</p>
+                                </div>
+                                <div class="text-center">
+                                    <span class="text-2xl font-bold text-red-400">${record.absentCount}</span>
+                                    <p class="text-xs text-gray-400">Absent</p>
+                                </div>
+                                <div class="w-16 h-16 rounded-full border-4 ${percentage >= 75 ? 'border-green-500' : 'border-red-500'} flex items-center justify-center">
+                                    <span class="text-sm font-bold">${percentage}%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Update UI
+        function updateUI() {
+            // Dashboard stats
+            document.getElementById('totalStudents').textContent = appData.students.length;
+            
+            const today = new Date().toDateString();
+            const todayRecords = appData.attendanceRecords.filter(r => new Date(r.date).toDateString() === today);
+            
+            let todayPresent = 0, todayAbsent = 0;
+            todayRecords.forEach(r => {
+                todayPresent += r.presentCount;
+                todayAbsent += r.absentCount;
+            });
+            
+            document.getElementById('todayPresent').textContent = todayPresent;
+            document.getElementById('todayAbsent').textContent = todayAbsent;
+
+            // Today's classes
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const todayDay = days[new Date().getDay()];
+            const todayClasses = appData.timetable.filter(c => c.day === todayDay);
+            document.getElementById('totalClasses').textContent = todayClasses.length;
+
+            // Current class card
+            updateCurrentClassCard(todayClasses);
+
+            updateClassDropdowns();
+            updateTimetableGrid();
+        }
+
+        // Update Current Class Card
+        function updateCurrentClassCard(todayClasses) {
+            const card = document.getElementById('currentClassCard');
+            if (todayClasses.length === 0) {
+                card.innerHTML = '<p class="text-gray-400">No classes scheduled for today.</p>';
+                return;
+            }
+
+            const now = new Date();
+            const currentTime = now.getHours() * 60 + now.getMinutes();
+
+            let currentClass = null;
+            let nextClass = null;
+
+            for (const cls of todayClasses.sort((a, b) => a.startTime.localeCompare(b.startTime))) {
+                const [startH, startM] = cls.startTime.split(':').map(Number);
+                const [endH, endM] = cls.endTime.split(':').map(Number);
+                const startMin = startH * 60 + startM;
+                const endMin = endH * 60 + endM;
+
+                if (currentTime >= startMin && currentTime < endMin) {
+                    currentClass = cls;
+                    break;
+                } else if (currentTime < startMin && !nextClass) {
+                    nextClass = cls;
+                }
+            }
+
+            const displayClass = currentClass || nextClass;
+            if (!displayClass) {
+                card.innerHTML = '<p class="text-gray-400">All classes completed for today.</p>';
+                return;
+            }
+
+            card.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="px-3 py-1 rounded-full text-xs ${currentClass ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'} mb-3 inline-block">
+                            ${currentClass ? '🔴 LIVE NOW' : '⏰ UP NEXT'}
+                        </span>
+                        <h3 class="text-2xl font-bold mb-2">${displayClass.subject}</h3>
+                        <p class="text-gray-400">
+                            <i class="fas fa-users mr-1"></i>${displayClass.name}
+                            <span class="mx-2">•</span>
+                            <i class="fas fa-user mr-1"></i>${displayClass.lecturer}
+                        </p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-3xl font-bold text-indigo-400">${displayClass.startTime}</p>
+                        <p class="text-gray-400">to ${displayClass.endTime}</p>
+                        <button onclick="showTab('attendance'); document.getElementById('attendanceClass').value='${displayClass.name}'; loadStudentsForAttendance();" class="mt-3 btn-gradient px-4 py-2 rounded-lg text-sm font-medium">
+                            Take Attendance
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Search in attendance
+        document.getElementById('searchStudent')?.addEventListener('keyup', function() {
+            const term = this.value.toLowerCase();
+            document.querySelectorAll('.student-card').forEach(card => {
+                const name = card.querySelector('h4').textContent.toLowerCase();
+                const roll = card.querySelector('p').textContent.toLowerCase();
+                card.style.display = (name.includes(term) || roll.includes(term)) ? 'flex' : 'none';
+            });
+        });
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>
